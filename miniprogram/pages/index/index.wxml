@@ -1,0 +1,113 @@
+<view class="page">
+  <!-- 顶部 -->
+  <view class="header">
+    <view class="logo-area">
+      <text class="logo-text">会说</text>
+      <text class="logo-subtitle">AI 沟通助手</text>
+    </view>
+  </view>
+
+  <!-- 搜索框 -->
+  <view class="search-box" bindtap="onSearchTap">
+    <text class="search-icon">🔍</text>
+    <text class="search-placeholder">描述你遇到的沟通场景...</text>
+  </view>
+
+  <!-- 快捷分类 -->
+  <view class="categories">
+    <view
+      class="category-item {{activeCategory === '' ? 'active' : ''}}"
+      catchtap="onCategoryTap" data-category=""
+    >
+      <text class="category-icon">📋</text>
+      <text class="category-name">全部</text>
+    </view>
+    <view
+      class="category-item {{activeCategory === 'workplace' ? 'active' : ''}}"
+      catchtap="onCategoryTap" data-category="workplace"
+    >
+      <text class="category-icon">💼</text>
+      <text class="category-name">职场</text>
+    </view>
+    <view
+      class="category-item {{activeCategory === 'guanxi' ? 'active' : ''}}"
+      catchtap="onCategoryTap" data-category="guanxi"
+    >
+      <text class="category-icon">🤝</text>
+      <text class="category-name">人情</text>
+    </view>
+    <view
+      class="category-item {{activeCategory === 'social' ? 'active' : ''}}"
+      catchtap="onCategoryTap" data-category="social"
+    >
+      <text class="category-icon">💕</text>
+      <text class="category-name">社交</text>
+    </view>
+    <view
+      class="category-item {{activeCategory === 'consumer' ? 'active' : ''}}"
+      catchtap="onCategoryTap" data-category="consumer"
+    >
+      <text class="category-icon">🛡️</text>
+      <text class="category-name">维权</text>
+    </view>
+    <view
+      class="category-item {{activeCategory === 'copywriting' ? 'active' : ''}}"
+      catchtap="onCategoryTap" data-category="copywriting"
+    >
+      <text class="category-icon">✍️</text>
+      <text class="category-name">文案</text>
+    </view>
+  </view>
+
+  <!-- 场景列表 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">{{activeCategory ? categoryNames[activeCategory] : '热门场景'}}</text>
+      <text class="section-count">{{scenarios.length}} 个场景</text>
+    </view>
+
+    <!-- 加载状态 -->
+    <view wx:if="{{loading}}" class="loading-area">
+      <view class="skeleton card" style="height:120rpx; margin-bottom:20rpx;"></view>
+      <view class="skeleton card" style="height:120rpx; margin-bottom:20rpx;"></view>
+      <view class="skeleton card" style="height:120rpx; margin-bottom:20rpx;"></view>
+    </view>
+
+    <!-- 场景卡片列表 -->
+    <view wx:elif="{{scenarios.length > 0}}" class="scenario-list">
+      <view
+        class="scenario-item"
+        wx:for="{{scenarios}}"
+        wx:key="id"
+        catchtap="onScenarioTap"
+        data-id="{{item._id}}"
+      >
+        <view class="scenario-top">
+          <text class="scenario-title">{{item.title}}</text>
+          <text class="hot-badge" wx:if="{{item.hotScore >= 85}}">🔥 热门</text>
+        </view>
+        <text class="scenario-desc">{{item.description}}</text>
+        <view class="scenario-meta">
+          <text class="tag">{{categoryNames[item.category] || item.category}}</text>
+          <text class="scenario-count">{{item.variables.length}} 项信息</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:else class="empty-state">
+      <text>暂无场景模板</text>
+      <text class="text-sm text-tertiary" style="margin-top: 8rpx;">试试其他分类，或使用自由对话</text>
+    </view>
+  </view>
+
+  <!-- 底部自由对话入口 -->
+  <view class="free-chat-entry" catchtap="onFreeChat">
+    <text class="free-chat-icon">💬</text>
+    <view class="free-chat-text">
+      <text class="free-chat-title">自由对话</text>
+      <text class="free-chat-desc">没有找到合适的模板？直接描述你的场景</text>
+    </view>
+    <text class="free-chat-arrow">›</text>
+  </view>
+</view>

@@ -1,0 +1,79 @@
+<view class="page">
+  <!-- 消息列表 -->
+  <scroll-view class="message-list" scroll-y scroll-into-view="{{scrollToId}}" scroll-with-animation>
+    <!-- 欢迎消息 -->
+    <view wx:if="{{messages.length === 0}}" class="welcome">
+      <view class="welcome-icon">💬</view>
+      <text class="welcome-title">自由对话</text>
+      <text class="welcome-desc">直接描述你遇到的沟通场景，AI会为你分析并提供话术建议</text>
+      <view class="suggestion-chips">
+        <view class="chip" catchtap="onSuggestion" data-text="想跟领导提加薪，怎么开口比较好">
+          想跟领导提加薪
+        </view>
+        <view class="chip" catchtap="onSuggestion" data-text="朋友找我借钱，不想借但又不想伤感情">
+          朋友借钱不想借
+        </view>
+        <view class="chip" catchtap="onSuggestion" data-text="跟同事有矛盾，不知道怎么缓和关系">
+          跟同事有矛盾
+        </view>
+        <view class="chip" catchtap="onSuggestion" data-text="买了东西想退货，商家不同意">
+          商家拒绝退货
+        </view>
+      </view>
+    </view>
+
+    <!-- 消息 -->
+    <view
+      wx:for="{{messages}}"
+      wx:key="index"
+      id="msg-{{index}}"
+      class="message {{item.role === 'user' ? 'user-msg' : 'ai-msg'}}"
+    >
+      <view class="msg-avatar">{{item.role === 'user' ? '👤' : '🤖'}}</view>
+      <view class="msg-content">
+        <view class="msg-bubble">
+          <block wx:if="{{item.hasStructured}}">
+            <!-- 思考过程（折叠） -->
+            <view class="chat-think" wx:if="{{item.analysis || item.strategy}}">
+              <view class="chat-think-header" catchtap="toggleThinking" data-index="{{index}}">
+                <text class="chat-think-text">💭 思考过程</text>
+                <text class="chat-think-arrow">{{thinkingStates[index] ? '收起 ▲' : '展开 ▼'}}</text>
+              </view>
+              <view class="chat-think-body {{thinkingStates[index] ? 'chat-think-open' : 'chat-think-fold'}}">
+                <text class="chat-think-content" wx:if="{{item.analysis}}">{{item.analysis}}</text>
+                <text class="chat-think-content" wx:if="{{item.strategy}}">
+{{item.strategy}}</text>
+              </view>
+            </view>
+            <!-- 具体话术（主要展示） -->
+            <text class="chat-script">{{item.script}}</text>
+          </block>
+          <block wx:else>
+            <text wx:for="{{item.parts}}" wx:for-item="part" wx:key="index" class="msg-text">{{part}}</text>
+          </block>
+        </view>
+        <view wx:if="{{item.role === 'ai'}}" class="msg-actions">
+          <text class="msg-action" catchtap="onCopyMsg" data-index="{{index}}">📋 复制</text>
+          <text class="msg-action" catchtap="onSaveMsg" data-index="{{index}}">{{savedStates[index] ? '⭐' : '☆'}} 收藏</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 输入区 -->
+  <view class="input-area">
+    <view class="input-wrapper">
+      <input
+        class="text-input"
+        placeholder="描述你的场景..."
+        value="{{inputValue}}"
+        bindinput="onInput"
+        bindconfirm="onSend"
+        confirm-type="send"
+      />
+      <button class="send-btn {{canSend ? 'send-active' : ''}}" catchtap="onSend" disabled="{{!canSend || sending}}">
+        {{sending ? '...' : '发送'}}
+      </button>
+    </view>
+  </view>
+</view>

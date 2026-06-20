@@ -1,0 +1,11 @@
+<view class="scenario-card" catchtap="onTap">
+  <view class="card-top">
+    <text class="card-title">{{title}}</text>
+    <text wx:if="{{hot}}" class="hot-badge">🔥 热门</text>
+  </view>
+  <text class="card-desc">{{description}}</text>
+  <view class="card-footer">
+    <text class="card-category tag">{{categoryName}}</text>
+    <text class="card-count">{{fieldCount}} 项信息</text>
+  </view>
+</view>

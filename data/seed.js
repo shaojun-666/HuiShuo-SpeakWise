@@ -1,0 +1,367 @@
+/**
+ * 场景模板数据导入脚本
+ *
+ * 使用方法：
+ * 1. 在微信开发者工具中打开项目
+ * 2. 在 cloudfunctions/ 目录下创建一个新的云函数 `seed`
+ * 3. 将此文件内容复制到 seed/index.js
+ * 4. 在云函数目录下执行 npm install
+ * 5. 在云控制台创建 `scenarios` 集合
+ * 6. 调用该云函数导入数据
+ *
+ * 或者直接在云控制台数据库中使用导入功能导入 data/scenarios.json
+ */
+
+const cloud = require('wx-server-sdk')
+cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
+const db = cloud.database()
+
+const scenarios = [
+  // ===== 职场沟通 =====
+  {
+    title: '跟领导提加薪',
+    category: 'workplace',
+    description: '想跟领导提加薪，不知道怎么开口，怕被拒绝',
+    promptTemplate: '我想跟领导提加薪，目前薪资{currentSalary}，期望{expectedSalary}。我在公司已经工作了{tenure}，最近的主要成就是{achievements}。请给出沟通策略和话术。',
+    variables: ['currentSalary', 'expectedSalary', 'tenure', 'achievements'],
+    hotScore: 95
+  },
+  {
+    title: '拒绝同事甩活',
+    category: 'workplace',
+    description: '同事想把他的工作推给我做，想拒绝但不想撕破脸',
+    promptTemplate: '同事{colleagueName}想让我帮他做{taskDescription}，但我自己手头工作也很多。请给出委婉拒绝的话术。',
+    variables: ['colleagueName', 'taskDescription'],
+    hotScore: 90
+  },
+  {
+    title: '跟领导请假',
+    category: 'workplace',
+    description: '有事需要请假，但不想说真实原因，又怕领导觉得不靠谱',
+    promptTemplate: '我想请假{days}天，原因是{realReason}，但不想跟领导说真实原因。请给出一个得体又不失可信的请假说法。',
+    variables: ['days', 'realReason'],
+    hotScore: 88
+  },
+  {
+    title: '跟领导汇报坏消息',
+    category: 'workplace',
+    description: '项目出了状况需要跟领导汇报坏消息，怕被骂',
+    promptTemplate: '我在负责的{projectName}项目遇到了{problem}，可能导致{impact}。请给出向领导汇报的话术，既要说明问题又不能显得在推卸责任。',
+    variables: ['projectName', 'problem', 'impact'],
+    hotScore: 85
+  },
+  {
+    title: '提离职',
+    category: 'workplace',
+    description: '想辞职但不知道怎么跟领导开口，怕被挽留尴尬',
+    promptTemplate: '我想离开现在的公司，原因是{reason}，但跟领导关系{relationship}。请给出得体、好聚好散的离职话术。',
+    variables: ['reason', 'relationship'],
+    hotScore: 82
+  },
+  {
+    title: '面试自我介绍',
+    category: 'workplace',
+    description: '面试时自我介绍总是平平无奇，想让人印象深刻',
+    promptTemplate: '我正在面试{position}岗位，我的核心优势是{strengths}，之前做过{experience}。请给出一个让人印象深刻的面试自我介绍模板。',
+    variables: ['position', 'strengths', 'experience'],
+    hotScore: 80
+  },
+  {
+    title: '被领导批评后回复',
+    category: 'workplace',
+    description: '被领导批评了，想回应得体',
+    promptTemplate: '领导因为{reason}批评了我。我感觉{situation}。请给出回应话术，既要表态改正又不能显得卑微。',
+    variables: ['reason', 'situation'],
+    hotScore: 78
+  },
+  {
+    title: '跨部门协作沟通',
+    category: 'workplace',
+    description: '需要其他部门配合工作，但对方不积极',
+    promptTemplate: '我需要{deptName}部门配合做{task}，但对方{status}。请给出推动跨部门协作的沟通话术。',
+    variables: ['deptName', 'task', 'status'],
+    hotScore: 75
+  },
+  {
+    title: '参加竞聘演讲',
+    category: 'workplace',
+    description: '公司内部竞聘需要演讲，不知道怎么表达自己的优势',
+    promptTemplate: '我正在竞聘{position}岗位，在目前岗位的主要业绩是{achievements}，我的管理理念是{philosophy}。请给出竞聘演讲框架。',
+    variables: ['position', 'achievements', 'philosophy'],
+    hotScore: 72
+  },
+  {
+    title: '给领导发工作汇报',
+    category: 'workplace',
+    description: '每周/每月写工作汇报不知道怎么写才能突出价值',
+    promptTemplate: '我这周/月完成了{workContent}，取得的成果是{results}，遇到的困难是{difficulties}。请帮忙写一份给领导的工作汇报。',
+    variables: ['workContent', 'results', 'difficulties'],
+    hotScore: 70
+  },
+
+  // ===== 人情世故 =====
+  {
+    title: '随份子说祝福话',
+    category: 'guanxi',
+    description: '朋友结婚/生孩子要随礼，不知道怎么说话才得体',
+    promptTemplate: '{relation}要{occasion}，我准备随{amount}元。需要一份得体、真诚的祝福语。',
+    variables: ['relation', 'occasion', 'amount'],
+    hotScore: 92
+  },
+  {
+    title: '拒绝朋友借钱',
+    category: 'guanxi',
+    description: '好朋友开口借钱，想拒绝又不伤感情',
+    promptTemplate: '好朋友{friendName}找我借{money}元，理由是{reason}。我不想借但又不想伤感情，请给出委婉拒绝的话术。',
+    variables: ['friendName', 'money', 'reason'],
+    hotScore: 90
+  },
+  {
+    title: '求人帮忙',
+    category: 'guanxi',
+    description: '有事需要托人帮忙，不知道怎么开口',
+    promptTemplate: '我需要托{person}办{thing}，我们之间的关系是{relationship}。请给出求人办事的说话技巧和话术。',
+    variables: ['person', 'thing', 'relationship'],
+    hotScore: 85
+  },
+  {
+    title: '过年给长辈拜年',
+    category: 'guanxi',
+    description: '过年给长辈发祝福，不想用网上那种套话',
+    promptTemplate: '给{relation}发拜年祝福，{relation}今年{status}。请写一段真诚、不套路的新年祝福。',
+    variables: ['relation', 'status'],
+    hotScore: 82
+  },
+  {
+    title: '道歉挽回关系',
+    category: 'guanxi',
+    description: '做错了事想道歉，不知道怎么开口',
+    promptTemplate: '我{做错了什么}，对方{person}是{relation}。我想真诚道歉挽回关系，请给出道歉话术。',
+    variables: ['做错了什么', 'person', 'relation'],
+    hotScore: 80
+  },
+  {
+    title: '感谢别人帮忙',
+    category: 'guanxi',
+    description: '别人帮了自己大忙，想表达感谢但觉得只说谢谢太轻了',
+    promptTemplate: '{person}帮我{帮了什么忙}，对我意义很大。请给一段真诚、得体的感谢话术，既有分量又不夸张。',
+    variables: ['person', '帮了什么忙'],
+    hotScore: 78
+  },
+  {
+    title: '拒绝长辈安排',
+    category: 'guanxi',
+    description: '长辈安排的事不想做（催婚、换工作等），不知道怎么拒绝',
+    promptTemplate: '长辈{relation}想让我{arrangement}，但我不想。请给出既能表达自己想法又不伤长辈面子的话术。',
+    variables: ['relation', 'arrangement'],
+    hotScore: 76
+  },
+  {
+    title: '给领导送礼',
+    category: 'guanxi',
+    description: '想给领导送礼表示感谢，但不知道怎么开口才不尴尬',
+    promptTemplate: '想给领导{reason}送{gift}，领导{leaderRelation}。请给出送礼时的说话话术。',
+    variables: ['reason', 'gift', 'leaderRelation'],
+    hotScore: 74
+  },
+  {
+    title: '请客喝酒说辞',
+    category: 'guanxi',
+    description: '饭局上敬酒不知道说什么',
+    promptTemplate: '饭局上给{person}敬酒，{person}是{relation}，场合是{occasion}。请给出得体、应景的敬酒词。',
+    variables: ['person', 'relation', 'occasion'],
+    hotScore: 72
+  },
+
+  // ===== 日常社交 =====
+  {
+    title: '跟喜欢的人搭讪',
+    category: 'social',
+    description: '遇到喜欢的人想搭讪加微信，不知道第一句话说什么',
+    promptTemplate: '我在{situation}遇到了一个喜欢的人，想搭讪要微信。我的特点{myTraits}，对方看起来{theirTraits}。请给出自然不油腻的搭讪话术。',
+    variables: ['situation', 'myTraits', 'theirTraits'],
+    hotScore: 88
+  },
+  {
+    title: '跟伴侣吵架后和解',
+    category: 'social',
+    description: '跟伴侣吵架了，想主动和好但不知道怎么开口',
+    promptTemplate: '我和伴侣因为{reason}吵了一架。我想主动和好，但{situation}。请给出和解话术。',
+    variables: ['reason', 'situation'],
+    hotScore: 86
+  },
+  {
+    title: '表白',
+    category: 'social',
+    description: '想向喜欢的人表白，但不知道怎么说',
+    promptTemplate: '我想向{person}表白，我们认识{howLong}，关系现状{status}。请给出一段真诚不尴尬的表白话术。',
+    variables: ['person', 'howLong', 'status'],
+    hotScore: 84
+  },
+  {
+    title: '拒绝追求/相亲',
+    category: 'social',
+    description: '有人追求/介绍相亲，没感觉但不想伤害对方',
+    promptTemplate: '{person}对我有意思（或介绍人介绍相亲），但我没感觉。请给出不得罪人的拒绝话术。',
+    variables: ['person', 'situation'],
+    hotScore: 80
+  },
+  {
+    title: '群聊发言',
+    category: 'social',
+    description: '在群里发言怕冷场或说错话',
+    promptTemplate: '我在{groupType}群里，想发言关于{topic}。群里的氛围是{atmosphere}。请给出合适的发言内容和方式。',
+    variables: ['groupType', 'topic', 'atmosphere'],
+    hotScore: 75
+  },
+  {
+    title: '安慰朋友',
+    category: 'social',
+    description: '朋友遇到困难/伤心事，不知道怎么安慰',
+    promptTemplate: '朋友{friendName}遇到了{situation}，情绪很低落。请给出真诚、有效的安慰话术。',
+    variables: ['friendName', 'situation'],
+    hotScore: 78
+  },
+  {
+    title: '被介绍对象',
+    category: 'social',
+    description: '有人给介绍对象，不知道怎么回应才得体',
+    promptTemplate: '{introducer}给我介绍了{person}，我的态度是{attitude}。请给出得体的回复。',
+    variables: ['introducer', 'person', 'attitude'],
+    hotScore: 72
+  },
+
+  // ===== 消费维权 =====
+  {
+    title: '网购退货维权',
+    category: 'consumer',
+    description: '网购商品有问题想退货，商家推诿',
+    promptTemplate: '我在{platform}购买了{product}，出现了{problem}。商家{sellerResponse}。请给出维权的沟通话术和投诉路径。',
+    variables: ['platform', 'product', 'problem', 'sellerResponse'],
+    hotScore: 88
+  },
+  {
+    title: '跟房东谈降房租',
+    category: 'consumer',
+    description: '想跟房东谈降房租，不知道怎么开口',
+    promptTemplate: '我租的房子在{location}，当前租金{currentRent}，市场同类型{marketPrice}。我{reasons}。请给出跟房东谈降租的话术。',
+    variables: ['location', 'currentRent', 'marketPrice', 'reasons'],
+    hotScore: 85
+  },
+  {
+    title: '饭店吃出异物索赔',
+    category: 'consumer',
+    description: '在餐厅吃出异物，想索赔但不知道怎么交涉',
+    promptTemplate: '在{restaurantName}吃饭吃出了{foreignObject}，消费金额{amount}。请给出跟店家交涉的步骤和话术。',
+    variables: ['restaurantName', 'foreignObject', 'amount'],
+    hotScore: 82
+  },
+  {
+    title: '健身房退卡',
+    category: 'consumer',
+    description: '想退健身卡但商家不退，合同里有霸王条款',
+    promptTemplate: '我在{shopName}办了{serviceType}卡，花费{amount}。现在想退卡但商家{response}。合同里{clause}。请给出维权策略和话术。',
+    variables: ['shopName', 'serviceType', 'amount', 'response', 'clause'],
+    hotScore: 80
+  },
+  {
+    title: '快递丢失理赔',
+    category: 'consumer',
+    description: '快递丢了找客服理赔',
+    promptTemplate: '我的快递{trackingNumber}在{status}环节丢失了，物品价值{value}。快递公司客服{response}。请给出索赔话术。',
+    variables: ['trackingNumber', 'status', 'value', 'response'],
+    hotScore: 76
+  },
+  {
+    title: '给差评被商家骚扰',
+    category: 'consumer',
+    description: '给了差评后商家一直打电话要求删除',
+    promptTemplate: '我在{platform}给了{shop}差评，原因是{reason}。商家一直{harassment}让我删除。请给出应对话术和投诉策略。',
+    variables: ['platform', 'shop', 'reason', 'harassment'],
+    hotScore: 74
+  },
+
+  // ===== 社交文案 =====
+  {
+    title: '朋友圈发旅行照',
+    category: 'copywriting',
+    description: '旅行拍了很多照片，想要配文',
+    promptTemplate: '我去了{destination}旅行，拍了{photoCount}张照片，最难忘的是{highlight}。请给出{style}风格的朋友圈配文，3个选项。',
+    variables: ['destination', 'photoCount', 'highlight', 'style'],
+    hotScore: 85
+  },
+  {
+    title: '小红书种草笔记',
+    category: 'copywriting',
+    description: '买了好东西想发小红书分享',
+    promptTemplate: '我买了{product}，使用{time}后的感受是{experience}，优点{pros}，缺点{cons}。请写一篇小红书种草笔记。',
+    variables: ['product', 'time', 'experience', 'pros', 'cons'],
+    hotScore: 83
+  },
+  {
+    title: '朋友圈官宣恋情',
+    category: 'copywriting',
+    description: '想发朋友圈官宣恋情，不想太肉麻又要有仪式感',
+    promptTemplate: '我和{partner}在一起了，我们的故事是{story}。请给3个不同风格的官宣文案。',
+    variables: ['partner', 'story'],
+    hotScore: 82
+  },
+  {
+    title: '抖音短视频文案',
+    category: 'copywriting',
+    description: '想发抖音视频，需要标题和文案',
+    promptTemplate: '我的视频内容是{content}，目标受众是{audience}，风格偏向{style}。请给出抖音文案和标题建议。',
+    variables: ['content', 'audience', 'style'],
+    hotScore: 78
+  },
+  {
+    title: '评论区回复',
+    category: 'copywriting',
+    description: '不知道怎么回复评论有趣',
+    promptTemplate: '有人在{platform}上评论{comment}，我的账号风格是{style}。请给出有趣又不失礼貌的回复。',
+    variables: ['platform', 'comment', 'style'],
+    hotScore: 75
+  },
+  {
+    title: '写年会发言稿',
+    category: 'copywriting',
+    description: '公司年会被临时叫上台发言，没准备',
+    promptTemplate: '在{companyName}的年会上，作为{role}被叫上台讲话。今年团队的主要成绩{achievements}。请给一段简短、得体、有感染力的即兴发言。',
+    variables: ['companyName', 'role', 'achievements'],
+    hotScore: 73
+  },
+  {
+    title: '改简历自我评价',
+    category: 'copywriting',
+    description: '简历上的自我评价写得太普通了',
+    promptTemplate: '我应聘{position}岗位，有{experience}年经验，核心技能{skills}，最大的成就{achievement}。请给出让人印象深刻的简历自我评价。',
+    variables: ['position', 'experience', 'skills', 'achievement'],
+    hotScore: 70
+  }
+]
+
+exports.main = async (event, context) => {
+  const db = cloud.database()
+  const total = scenarios.length
+  let success = 0
+  let errors = []
+
+  for (let i = 0; i < scenarios.length; i++) {
+    try {
+      await db.collection('scenarios').add({ data: scenarios[i] })
+      success++
+    } catch (err) {
+      errors.push({ index: i, title: scenarios[i].title, error: err.message })
+    }
+  }
+
+  return {
+    code: 0,
+    data: {
+      total,
+      success,
+      failed: errors.length,
+      errors: errors.length > 0 ? errors : undefined
+    }
+  }
+}

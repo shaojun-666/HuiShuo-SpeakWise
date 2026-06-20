@@ -1,0 +1,114 @@
+<view class="page">
+  <!-- 场景信息 -->
+  <view class="scenario-info">
+    <view class="scenario-header">
+      <text class="scenario-category tag">{{categoryNames[scenario.category] || scenario.category}}</text>
+      <text class="scenario-title">{{scenario.title}}</text>
+    </view>
+    <text class="scenario-desc">{{scenario.description}}</text>
+  </view>
+
+  <!-- 填写表单 -->
+  <view wx:if="{{!showResult}}" class="form-section">
+    <view class="form-title">填写以下信息</view>
+
+    <view class="form-group" wx:for="{{formFields}}" wx:for-item="field" wx:key="index">
+      <text class="form-label">{{field.label}}</text>
+      <input
+        class="form-input"
+        placeholder="{{field.placeholder}}"
+        value="{{field.value}}"
+        bindinput="onFieldInput"
+        data-index="{{index}}"
+      />
+    </view>
+
+    <!-- 补充背景 -->
+    <view class="form-group">
+      <text class="form-label">补充背景（可选）</text>
+      <textarea
+        class="form-textarea"
+        placeholder="补充对方的性格、你们之间的关系等额外信息，让AI更精准"
+        value="{{extraContext}}"
+        bindinput="onExtraContextInput"
+      />
+    </view>
+
+    <button class="submit-btn" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">
+      生成话术方案
+    </button>
+  </view>
+
+  <!-- 结果展示 -->
+  <view wx:else class="result-section">
+    <!-- 思考过程（默认折叠，包含局势分析+策略建议） -->
+    <view class="thinking-section">
+      <view class="thinking-header" catchtap="toggleThinking">
+        <text class="thinking-icon">💭</text>
+        <text class="thinking-title">思考过程</text>
+        <text class="thinking-arrow">{{thinkingExpanded ? '▲ 收起' : '▼ 展开'}}</text>
+      </view>
+      <view class="thinking-body {{thinkingExpanded ? 'thinking-expanded' : 'thinking-collapsed'}}">
+        <!-- 局势分析 -->
+        <view class="result-block" wx:if="{{analysisParts.length}}">
+          <view class="block-header">
+            <text class="block-icon">📊</text>
+            <text class="block-title">局势分析</text>
+          </view>
+          <view class="block-content thinking-text">
+            <text wx:for="{{analysisParts}}" wx:key="index">{{item}}</text>
+          </view>
+        </view>
+        <!-- 策略建议 -->
+        <view class="result-block" wx:if="{{strategyParts.length}}">
+          <view class="block-header">
+            <text class="block-icon">🎯</text>
+            <text class="block-title">策略建议</text>
+          </view>
+          <view class="strategy-list">
+            <view class="strategy-item" wx:for="{{strategyParts}}" wx:for-item="strategy" wx:key="index">
+              <text class="strategy-num">{{index + 1}}</text>
+              <text class="strategy-text thinking-text">{{strategy}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 具体话术（主要展示） -->
+    <view class="result-block script-block">
+      <view class="block-header">
+        <text class="block-icon">💬</text>
+        <text class="block-title">具体话术</text>
+      </view>
+      <view class="script-list">
+        <view class="script-item" wx:for="{{scriptParts}}" wx:for-item="script" wx:key="index">
+          <text class="script-label">话术 {{index + 1}}</text>
+          <text class="script-text">{{script}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-bar">
+      <button class="action-btn copy-btn" bindtap="onCopy">
+        📋 复制全部
+      </button>
+      <button class="action-btn save-btn {{isSaved ? 'saved' : ''}}" bindtap="onSave">
+        {{isSaved ? '⭐' : '☆'}} 收藏
+      </button>
+      <button class="action-btn retry-btn" bindtap="onRetry">
+        🔄 重新生成
+      </button>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{submitting}}" class="loading-overlay">
+    <view class="loading-card">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">AI 正在思考...</text>
+      <text class="loading-desc">分析您的场景，生成最佳沟通方案</text>
+    </view>
+  </view>
+</view>

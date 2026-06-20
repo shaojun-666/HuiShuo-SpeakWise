@@ -1,0 +1,19 @@
+<view class="result-card">
+  <view class="section" wx:if="{{analysis}}">
+    <view class="section-header"><text class="section-icon">📊</text><text class="section-title">局势分析</text></view>
+    <text class="section-text">{{analysis}}</text>
+  </view>
+  <view class="section" wx:if="{{strategy}}">
+    <view class="section-header"><text class="section-icon">🎯</text><text class="section-title">策略建议</text></view>
+    <text class="section-text">{{strategy}}</text>
+  </view>
+  <view class="section script-section" wx:if="{{script}}">
+    <view class="section-header"><text class="section-icon">💬</text><text class="section-title">具体话术</text></view>
+    <text class="section-text script-text">{{script}}</text>
+  </view>
+  <view class="card-actions">
+    <text class="action" catchtap="onCopy">📋 复制</text>
+    <text class="action" catchtap="onSave">⭐ 收藏</text>
+    <text class="action" catchtap="onRetry">🔄 重新生成</text>
+  </view>
+</view>
