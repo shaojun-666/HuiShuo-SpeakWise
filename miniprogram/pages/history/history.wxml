@@ -28,9 +28,7 @@
         wx:for="{{historyList}}"
         wx:key="_id"
         catchtap="onHistoryTap"
-        data-id="{{item._id}}"
-        data-content="{{item.aiResponse}}"
-        data-title="{{item.userInput}}"
+        data-item="{{item}}"
       >
         <view class="card-header">
           <text class="card-title">{{item.userInput}}</text>

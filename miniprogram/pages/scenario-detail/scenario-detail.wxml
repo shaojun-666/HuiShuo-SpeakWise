@@ -2,10 +2,11 @@
   <!-- 场景信息 -->
   <view class="scenario-info">
     <view class="scenario-header">
-      <text class="scenario-category tag">{{categoryNames[scenario.category] || scenario.category}}</text>
-      <text class="scenario-title">{{scenario.title}}</text>
+      <text class="scenario-category tag" wx:if="{{scenario.category}}">{{categoryNames[scenario.category] || scenario.category}}</text>
+      <text class="scenario-title">{{scenario.title || '场景详情'}}</text>
     </view>
-    <text class="scenario-desc">{{scenario.description}}</text>
+    <text class="scenario-desc" wx:if="{{scenario.description}}">{{scenario.description}}</text>
+    <text class="scenario-desc" wx:else>加载中...</text>
   </view>
 
   <!-- 填写表单 -->
@@ -42,7 +43,7 @@
   <!-- 结果展示 -->
   <view wx:else class="result-section">
     <!-- 思考过程（默认折叠，包含局势分析+策略建议） -->
-    <view class="thinking-section">
+    <view wx:if="{{analysisParts.length || strategyParts.length}}" class="thinking-section">
       <view class="thinking-header" catchtap="toggleThinking">
         <text class="thinking-icon">💭</text>
         <text class="thinking-title">思考过程</text>
@@ -75,16 +76,52 @@
       </view>
     </view>
 
-    <!-- 具体话术（主要展示） -->
+    <!-- 话术方案卡片 -->
     <view class="result-block script-block">
       <view class="block-header">
         <text class="block-icon">💬</text>
-        <text class="block-title">具体话术</text>
+        <text class="block-title">话术方案</text>
       </view>
-      <view class="script-list">
+
+      <!-- 多方案卡片 -->
+      <view wx:if="{{scriptVariants.length > 0}}" class="variant-list">
+        <view class="variant-card" wx:for="{{scriptVariants}}" wx:for-item="variant" wx:key="index">
+          <view class="variant-num-wrap">
+            <text class="variant-num">方案 {{index + 1}}</text>
+            <text class="variant-title">{{variant.title}}</text>
+          </view>
+          <text class="variant-content">{{variant.content}}</text>
+          <view class="variant-actions">
+            <view class="v-action v-action-copy" catchtap="onCopyScript" data-index="{{index}}">
+              复制
+            </view>
+            <view class="v-action v-action-edit" catchtap="onShowAdjust" data-index="{{index}}">
+              调整
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 兼容旧格式（无多方案时） -->
+      <view wx:else class="script-list">
         <view class="script-item" wx:for="{{scriptParts}}" wx:for-item="script" wx:key="index">
           <text class="script-label">话术 {{index + 1}}</text>
           <text class="script-text">{{script}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 重新生成区域 -->
+    <view class="regen-section">
+      <view wx:if="{{!showRegenInput}}" class="regen-trigger" catchtap="onToggleRegenInput">
+        <text class="regen-trigger-icon">🔄</text>
+        <text class="regen-trigger-text">对结果不满意？输入调整方向重新生成</text>
+      </view>
+      <view wx:else class="regen-input-wrap">
+        <textarea class="regen-input" placeholder="输入你想调整的方向，如：更委婉一些、更正式、加入法律条款等（可不填直接重新生成）" value="{{regenInput}}" bindinput="onRegenInput" />
+        <view class="regen-btns">
+          <view class="regen-btn regen-btn-cancel" catchtap="onToggleRegenInput">取消</view>
+          <view class="regen-btn regen-btn-go" catchtap="onRegenerate">重新生成</view>
         </view>
       </view>
     </view>
@@ -98,7 +135,7 @@
         {{isSaved ? '⭐' : '☆'}} 收藏
       </button>
       <button class="action-btn retry-btn" bindtap="onRetry">
-        🔄 重新生成
+        🔄 返回修改
       </button>
     </view>
   </view>
@@ -109,6 +146,26 @@
       <view class="loading-spinner"></view>
       <text class="loading-text">AI 正在思考...</text>
       <text class="loading-desc">分析您的场景，生成最佳沟通方案</text>
+    </view>
+  </view>
+
+  <!-- 调整弹窗 -->
+  <view wx:if="{{showAdjustModal}}" class="modal-overlay">
+    <view class="modal-card">
+      <view class="modal-header">
+        <text class="modal-title">调整话术方案 {{adjustIndex + 1}}</text>
+        <text class="modal-close" catchtap="onCloseAdjust">✕</text>
+      </view>
+      <view class="modal-body">
+        <text class="modal-label">请输入调整方向：</text>
+        <textarea class="modal-input" placeholder="例如：更委婉一些、语气更强硬、加入法律依据、更口语化..." value="{{adjustInput}}" bindinput="onAdjustInput" />
+      </view>
+      <view class="modal-footer">
+        <view class="modal-btn modal-btn-cancel" catchtap="onCloseAdjust">取消</view>
+        <view class="modal-btn modal-btn-go {{adjustLoading ? 'disabled' : ''}}" catchtap="onSubmitAdjust">
+          {{adjustLoading ? '调整中...' : '确认调整'}}
+        </view>
+      </view>
     </view>
   </view>
 </view>

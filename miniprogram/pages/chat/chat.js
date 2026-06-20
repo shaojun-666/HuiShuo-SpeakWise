@@ -11,6 +11,14 @@ Page({
     savedStates: {}
   },
 
+  onShow() {
+    const ctx = wx.getStorageSync('chatContext')
+    if (ctx && ctx.message) {
+      this.setData({ inputValue: ctx.message, canSend: true })
+      wx.removeStorageSync('chatContext')
+    }
+  },
+
   onInput(e) {
     const val = e.detail.value
     this.setData({

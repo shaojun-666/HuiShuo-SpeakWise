@@ -85,7 +85,8 @@
   background: var(--bg-secondary);
   color: var(--text-primary);
   border-bottom-left-radius: 6rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06);
+  border: 2rpx solid var(--border-secondary);
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
 }
 .msg-text { display: block; white-space: pre-wrap; }
 .msg-actions {

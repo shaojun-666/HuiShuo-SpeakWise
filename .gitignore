@@ -4,3 +4,4 @@ miniprogram_npm/
 .DS_Store
 *.log
 .project
+project.private.config.json

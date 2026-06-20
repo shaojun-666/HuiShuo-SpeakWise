@@ -1,0 +1,22 @@
+<view class="page">
+  <view class="qa-section">
+    <view class="qa-card qa-user-card">
+      <view class="qa-label">
+        <text>🙋 你的问题</text>
+      </view>
+      <text class="qa-content">{{userInput}}</text>
+    </view>
+
+    <view class="qa-card qa-ai-card">
+      <view class="qa-label">
+        <text>🤖 AI 回复</text>
+      </view>
+      <text class="qa-content">{{aiResponse}}</text>
+    </view>
+  </view>
+
+  <view class="action-bar">
+    <view class="action-btn copy-btn" catchtap="onCopy">📋 复制全部</view>
+    <view class="action-btn retry-btn" catchtap="onChatAgain">💬 继续对话</view>
+  </view>
+</view>

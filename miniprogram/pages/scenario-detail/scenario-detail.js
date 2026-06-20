@@ -16,11 +16,21 @@ Page({
     analysisParts: [],
     strategyParts: [],
     scriptParts: [],
+    scriptVariants: [],
     rawResponse: '',
     categoryNames: CATEGORY_NAMES,
     thinkingExpanded: false,
     hasStructured: false,
-    isSaved: false
+    isSaved: false,
+    // 调整弹窗
+    showAdjustModal: false,
+    adjustIndex: -1,
+    adjustInput: '',
+    adjustLoading: false,
+    adjustResult: '',
+    // 重新生成输入
+    showRegenInput: false,
+    regenInput: ''
   },
 
   onLoad(options) {
@@ -144,8 +154,11 @@ Page({
   async onSubmit() {
     const { formFields, extraContext, scenario } = this.data
 
-    const values = formFields.map(f => `${f.label}：${f.value}`).join('；')
-    const fullContent = `【场景】${scenario.title}\n${values}\n${extraContext ? '【补充】' + extraContext : ''}`
+    const values = formFields
+      .filter(f => f.value && f.value.trim())
+      .map(f => `${f.label}：${f.value.trim()}`)
+      .join('；')
+    const fullContent = `【场景】${scenario.title}${values ? '\n' + values : ''}${extraContext ? '\n【补充】' + extraContext : ''}`
 
     this.setData({ submitting: true, isSaved: false })
 
@@ -156,30 +169,92 @@ Page({
         contextInfo: extraContext
       })
 
-      if (result.analysis !== undefined) {
-        // 新结构化格式
-        this.setData({
-          showResult: true,
-          hasStructured: true,
-          analysisParts: result.analysis ? result.analysis.split('\n').filter(l => l.trim()) : [],
-          strategyParts: result.strategy ? result.strategy.split('\n').filter(l => l.trim()) : [],
-          scriptParts: result.script ? result.script.split('\n').filter(l => l.trim()) : [],
-          rawResponse: result.response
-        })
-      } else {
-        this.parseAndDisplay(result.response)
-      }
+      this.setResultData(result)
     } catch (err) {
       wx.showToast({ title: err || '生成失败', icon: 'none' })
     }
     this.setData({ submitting: false })
   },
 
+  // 统一处理返回数据
+  setResultData(result) {
+    if (!result) {
+      this.setData({
+        showResult: true,
+        analysisParts: [],
+        strategyParts: [],
+        scriptParts: ['暂无返回结果'],
+        scriptVariants: [],
+        rawResponse: ''
+      })
+      return
+    }
+
+    if (result.variants && result.variants.length > 0) {
+      // 新版多方案格式
+      this.setData({
+        showResult: true,
+        hasStructured: result.analysis !== undefined,
+        analysisParts: result.analysis ? result.analysis.split('\n').filter(l => l.trim()) : [],
+        strategyParts: result.strategy ? result.strategy.split('\n').filter(l => l.trim()) : [],
+        scriptParts: result.script ? result.script.split('\n').filter(l => l.trim()) : [],
+        scriptVariants: result.variants,
+        rawResponse: result.response
+      })
+    } else if (result.analysis !== undefined) {
+      // 旧结构化格式（兼容）
+      this.setData({
+        showResult: true,
+        hasStructured: true,
+        analysisParts: result.analysis ? result.analysis.split('\n').filter(l => l.trim()) : [],
+        strategyParts: result.strategy ? result.strategy.split('\n').filter(l => l.trim()) : [],
+        scriptParts: result.script ? result.script.split('\n').filter(l => l.trim()) : [],
+        scriptVariants: this.extractVariants(result.script || ''),
+        rawResponse: result.response
+      })
+    } else {
+      this.parseAndDisplay(result.response)
+    }
+  },
+
+  // 从script文本中提取多方案（前端备用解析）
+  extractVariants(scriptText) {
+    const variants = []
+    const lines = (scriptText || '').split('\n')
+    let current = null
+    const headerRegex = /^【方案[一二三四五六七八1-8][:：]\s*(.+)】/
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed) continue
+      const match = trimmed.match(headerRegex)
+      if (match) {
+        if (current) variants.push(current)
+        current = { title: match[1].trim(), content: '' }
+      } else if (current) {
+        current.content += trimmed + '\n'
+      }
+    }
+    if (current) variants.push(current)
+
+    return variants.map(v => ({ title: v.title, content: v.content.trim() }))
+  },
+
   parseAndDisplay(response) {
-    const text = response || ''
+    const text = (response || '').trim()
+    if (!text) {
+      this.setData({
+        showResult: true,
+        analysisParts: [],
+        strategyParts: [],
+        scriptParts: ['暂无返回结果'],
+        scriptVariants: [],
+        rawResponse: ''
+      })
+      return
+    }
     let analysis = '', strategy = '', script = ''
 
-    // 按标题解析Markdown格式的返回
     const lines = text.split('\n')
     let currentSection = ''
     const sections = { analysis: [], strategy: [], script: [] }
@@ -198,13 +273,158 @@ Page({
       }
     }
 
+    const hasAnySection = sections.analysis.length || sections.strategy.length || sections.script.length
+    const scriptText = sections.script.join('\n')
+
+    if (!hasAnySection) {
+      // 完全无分段时，整段当作话术方案输出，不造假分析/策略
+      this.setData({
+        showResult: true,
+        analysisParts: [],
+        strategyParts: [],
+        scriptParts: [text],
+        scriptVariants: this.extractVariants(text),
+        rawResponse: text
+      })
+    } else {
+      this.setData({
+        showResult: true,
+        analysisParts: sections.analysis,
+        strategyParts: sections.strategy,
+        scriptParts: sections.script,
+        scriptVariants: this.extractVariants(scriptText),
+        rawResponse: text
+      })
+    }
+  },
+
+  // 复制指定方案
+  onCopyScript(e) {
+    const { index } = e.currentTarget.dataset
+    const variant = this.data.scriptVariants[index]
+    if (variant) {
+      wx.setClipboardData({
+        data: `${variant.title}\n${variant.content}`,
+        success: () => wx.showToast({ title: '已复制', icon: 'success' })
+      })
+    }
+  },
+
+  // 显示调整弹窗
+  onShowAdjust(e) {
+    const { index } = e.currentTarget.dataset
     this.setData({
-      showResult: true,
-      analysisParts: sections.analysis.length > 0 ? sections.analysis : ['AI正在为您分析...'],
-      strategyParts: sections.strategy.length > 0 ? sections.strategy : ['请参考话术部分'],
-      scriptParts: sections.script.length > 0 ? sections.script : [text],
-      rawResponse: text
+      showAdjustModal: true,
+      adjustIndex: index,
+      adjustInput: '',
+      adjustResult: ''
     })
+  },
+
+  // 关闭调整弹窗
+  onCloseAdjust() {
+    this.setData({
+      showAdjustModal: false,
+      adjustIndex: -1,
+      adjustInput: '',
+      adjustLoading: false,
+      adjustResult: ''
+    })
+  },
+
+  // 调整输入
+  onAdjustInput(e) {
+    this.setData({ adjustInput: e.detail.value })
+  },
+
+  // 提交调整
+  async onSubmitAdjust() {
+    const { adjustInput, adjustIndex, scriptVariants, formFields, extraContext, scenario } = this.data
+    if (!adjustInput.trim()) {
+      wx.showToast({ title: '请输入调整方向', icon: 'none' })
+      return
+    }
+
+    const variant = scriptVariants[adjustIndex]
+    if (!variant) return
+
+    const values = formFields
+      .filter(f => f.value && f.value.trim())
+      .map(f => `${f.label}：${f.value.trim()}`)
+      .join('；')
+    const fullContent = `【场景】${scenario.title}${values ? '\n' + values : ''}${extraContext ? '\n【补充】' + extraContext : ''}`
+
+    this.setData({ adjustLoading: true })
+
+    try {
+      const result = await api.chat({
+        content: fullContent,
+        category: scenario.category || 'general',
+        contextInfo: extraContext,
+        adjustment: adjustInput.trim(),
+        currentVariant: `${variant.title}\n${variant.content}`,
+        variantIndex: adjustIndex
+      })
+
+      if (result.adjusted) {
+        // 替换对应方案
+        const key = `scriptVariants[${adjustIndex}]`
+        this.setData({
+          [key]: { title: '已调整', content: result.response },
+          adjustResult: result.response,
+          adjustLoading: false
+        })
+        wx.showToast({ title: '调整完成', icon: 'success' })
+        this.onCloseAdjust()
+      }
+    } catch (err) {
+      wx.showToast({ title: err || '调整失败', icon: 'none' })
+      this.setData({ adjustLoading: false })
+    }
+  },
+
+  // 显示/隐藏重新生成输入
+  onToggleRegenInput() {
+    this.setData({ showRegenInput: !this.data.showRegenInput })
+  },
+
+  // 重新生成输入
+  onRegenInput(e) {
+    this.setData({ regenInput: e.detail.value })
+  },
+
+  // 执行重新生成
+  async onRegenerate() {
+    const { formFields, extraContext, scenario, regenInput } = this.data
+
+    const values = formFields
+      .filter(f => f.value && f.value.trim())
+      .map(f => `${f.label}：${f.value.trim()}`)
+      .join('；')
+    let fullContent = `【场景】${scenario.title}${values ? '\n' + values : ''}${extraContext ? '\n【补充】' + extraContext : ''}`
+    if (regenInput.trim()) {
+      fullContent += `\n【调整要求】${regenInput.trim()}`
+    }
+
+    this.setData({
+      submitting: true,
+      showRegenInput: false,
+      regenInput: ''
+    })
+
+    try {
+      const result = await api.chat({
+        content: fullContent,
+        category: scenario.category || 'general',
+        contextInfo: extraContext,
+        skipCache: true
+      })
+
+      this.setResultData(result)
+    } catch (err) {
+      wx.showToast({ title: err || '生成失败', icon: 'none' })
+    }
+    this.setData({ submitting: false })
   },
 
   onCopy() {

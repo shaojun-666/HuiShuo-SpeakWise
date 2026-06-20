@@ -14,9 +14,9 @@ const SYSTEM_PROMPTS = {
 
 【局势分析】分析场景的关系、利益、风险。
 【策略建议】提供合适的应对方向和策略。
-【具体话术】给出可直接使用的话术，详细可操作。
+【具体话术】给出3-4个不同风格的完整话术版本，每个版本分别用【方案N：风格描述】标记（如【方案一：委婉含蓄版】、【方案二：直接坦诚版】）。覆盖不同沟通策略，各方案空行分隔。
 
-要求：话术为核心，各部分自然连贯，不要出现"话术1""话术2""策略一""策略二"等编号。输出简洁不加多余符号。
+要求：话术为核心，各部分自然连贯。输出简洁不加多余符号。
 ${RESTRICTION}`,
 
   guanxi: `你是中国人情世故专家，熟悉送礼、随礼、求人办事等场景。
@@ -24,9 +24,9 @@ ${RESTRICTION}`,
 
 【局势分析】分析关系亲疏、场合规矩。
 【策略建议】提供合适的处理方式，考虑各地风俗差异。
-【具体话术】可直接使用的说话模板，注意"得体"，涉及金额给合理范围。
+【具体话术】给出3-4个不同风格的完整话术版本，每个版本分别用【方案N：风格描述】标记。注意"得体"，涉及金额给合理范围。
 
-要求：话术为核心，各部分自然连贯，不要出现"话术1""话术2""策略一""策略二"等编号。输出简洁不加多余符号。
+要求：话术为核心，各部分自然连贯。输出简洁不加多余符号。
 ${RESTRICTION}`,
 
   social: `你是社交沟通专家，擅长各种人际交往场景。
@@ -34,9 +34,9 @@ ${RESTRICTION}`,
 
 【局势分析】分析社交场合关键因素。
 【策略建议】提供合适的应对方向，考虑内向/外向不同方案，注重边界感。
-【具体话术】可直接使用的说法，自然真诚避免套路。
+【具体话术】给出3-4个不同风格的完整话术版本，每个版本分别用【方案N：风格描述】标记。自然真诚避免套路。
 
-要求：话术为核心，各部分自然连贯，不要出现"话术1""话术2""策略一""策略二"等编号。输出简洁不加多余符号。
+要求：话术为核心，各部分自然连贯。输出简洁不加多余符号。
 ${RESTRICTION}`,
 
   consumer: `你是消费者维权专家，熟悉《消费者权益保护法》等法规。
@@ -44,9 +44,9 @@ ${RESTRICTION}`,
 
 【局势分析】分析消费纠纷关键问题，引用相关法规。
 【策略建议】从温和到正式的递进策略，强调保留证据。
-【具体话术】针对不同阶段的话术模板，法律引用准确但通俗。
+【具体话术】给出3-4个不同风格的完整话术版本，每个版本分别用【方案N：风格描述】标记。法律引用准确但通俗。
 
-要求：话术为核心，各部分自然连贯，不要出现"话术1""话术2""策略一""策略二"等编号。输出简洁不加多余符号。
+要求：话术为核心，各部分自然连贯。输出简洁不加多余符号。
 ${RESTRICTION}`,
 
   copywriting: `你是社交媒体文案专家，熟悉朋友圈、小红书、抖音等平台。
@@ -54,9 +54,9 @@ ${RESTRICTION}`,
 
 【局势分析】分析目标受众和平台特点。
 【策略建议】提供文案方向和优化建议。
-【具体话术】不同风格的文案选项，含配图建议和话题标签。朋友圈偏生活化、小红书偏种草、抖音偏短平快。
+【具体话术】不同风格的文案选项，每个版本用【方案N：风格描述】标记。含配图建议和话题标签。朋友圈偏生活化、小红书偏种草、抖音偏短平快。
 
-要求：话术为核心，各部分自然连贯，不要出现"话术1""话术2""策略一""策略二"等编号。输出简洁不加多余符号。
+要求：话术为核心，各部分自然连贯。输出简洁不加多余符号。
 ${RESTRICTION}`,
 
   general: `你是资深沟通专家，精通各种人际沟通场景。
@@ -64,9 +64,9 @@ ${RESTRICTION}`,
 
 【局势分析】分析场景关键因素。
 【策略建议】提供合适的应对策略。
-【具体话术】可直接使用的说话模板，具体可操作。涉及敏感内容礼貌拒绝。
+【具体话术】给出3-4个不同风格的完整话术版本，每个版本分别用【方案N：风格描述】标记（如【方案一：委婉含蓄版】、【方案二：直接坦诚版】）。覆盖不同沟通策略，各方案空行分隔。
 
-要求：话术为核心，各部分自然连贯，不要出现"话术1""话术2""策略一""策略二"等编号。输出简洁不加多余符号。
+要求：话术为核心，各部分自然连贯。输出简洁不加多余符号。
 ${RESTRICTION}`
 }
 
@@ -119,7 +119,73 @@ function parseSections(text) {
     sections.script = clean.trim()
   }
 
+  // 兜底：当AI把话术都塞进strategy段时，从中切出【方案N】块归入script
+  if (!sections.script && sections.strategy) {
+    const headerRegex = /^【方案[一二三四五六七八1-8][:：]\s*(.+?)】/
+    const stratLines = sections.strategy.split('\n')
+    const blocks = []
+    let prefix = []
+    let current = null
+    let found = false
+
+    for (const line of stratLines) {
+      const trimmed = line.trim()
+      const match = trimmed.match(headerRegex)
+      if (match) {
+        found = true
+        if (current) blocks.push(current)
+        current = { header: trimmed }
+      } else if (current) {
+        current.content = (current.content || '') + trimmed + '\n'
+      } else if (trimmed) {
+        prefix.push(trimmed)
+      }
+    }
+    if (current) blocks.push(current)
+
+    if (found) {
+      sections.strategy = prefix.join('\n').trim()
+      sections.script = blocks.map(v => `${v.header}\n${(v.content || '').trim()}`).join('\n\n')
+    }
+  }
+
   return sections
+}
+
+// 从script文本中解析多个话术方案
+function parseVariants(scriptText) {
+  const variants = []
+  const lines = scriptText.split('\n')
+  let current = null
+
+  const headerRegex = /^【方案[一二三四五六七八1-8][:：]\s*(.+)】/
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed) continue
+
+    const match = trimmed.match(headerRegex)
+    if (match) {
+      if (current) {
+        variants.push(current)
+      }
+      current = {
+        title: match[1].trim(),
+        content: ''
+      }
+    } else if (current) {
+      current.content += trimmed + '\n'
+    }
+  }
+  if (current) {
+    variants.push(current)
+  }
+
+  // 清理尾部换行
+  return variants.map(v => ({
+    title: v.title,
+    content: v.content.trim()
+  }))
 }
 
 // 生成缓存key（基于system prompt + 用户输入）
@@ -178,8 +244,8 @@ function callQwen(messages) {
     const data = JSON.stringify({
       model: 'qwen-plus',
       messages,
-      temperature: 0.8,
-      max_tokens: 2000,
+      temperature: 0.85,
+      max_tokens: 3000,
       stream: false
     })
 
@@ -220,7 +286,7 @@ function callQwen(messages) {
 }
 
 exports.main = async (event, context) => {
-  const { content, category = 'general', contextInfo = '', skipCache = false } = event
+  const { content, category = 'general', contextInfo = '', skipCache = false, adjustment = '', currentVariant = '', variantIndex = -1 } = event
   const wxContext = cloud.getWXContext()
 
   if (!content || content.trim().length === 0) {
@@ -232,6 +298,35 @@ exports.main = async (event, context) => {
   }
 
   try {
+    // === 调整模式：基于已有话术进行调整 ===
+    if (adjustment && currentVariant) {
+      const adjustPrompt = `你是一个沟通话术优化专家。用户对已有话术不满意，希望根据调整要求进行修改。
+
+请直接输出优化后的话术内容，不要输出分析过程、不要加标题、不要加额外解释。只输出修改后的话术文本。`
+
+      const adjustMessage = `【原始场景】${content}
+${contextInfo ? '【背景】' + contextInfo : ''}
+【当前话术】${currentVariant}
+【调整要求】${adjustment}
+
+请根据调整要求，直接输出修改后的话术：`
+
+      const responseText = await callQwen([
+        { role: 'system', content: adjustPrompt },
+        { role: 'user', content: adjustMessage }
+      ])
+
+      return {
+        code: 0,
+        data: {
+          variantIndex,
+          response: responseText,
+          adjusted: true
+        }
+      }
+    }
+
+    // === 正常生成 / 重新生成模式 ===
     const systemPrompt = SYSTEM_PROMPTS[category] || SYSTEM_PROMPTS.general
     const userMessage = `场景：${content}\n背景：${contextInfo || '无'}`
 
@@ -240,36 +335,54 @@ exports.main = async (event, context) => {
       const cachedResponse = await getCached(cacheKey)
       if (cachedResponse) {
         const parsed = parseSections(cachedResponse)
-        return { code: 0, data: { response: cachedResponse, analysis: parsed.analysis, strategy: parsed.strategy, script: parsed.script, cached: true } }
+        const variants = parseVariants(parsed.script)
+        return {
+          code: 0,
+          data: {
+            response: cachedResponse,
+            analysis: parsed.analysis,
+            strategy: parsed.strategy,
+            script: parsed.script,
+            variants,
+            cached: true
+          }
+        }
       }
     }
 
-    console.log('[chat] start AI call, category:', category, 'content length:', content.length, 'API_KEY set:', !!process.env.AI_API_KEY)
+    console.log('[chat] start AI call, category:', category, 'content length:', content.length, 'skipCache:', skipCache)
     const responseText = await callQwen([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userMessage }
     ])
     console.log('[chat] AI call succeeded, response length:', responseText.length)
 
-    const cacheKey = makeCacheKey(systemPrompt, userMessage)
-    setCache(cacheKey, category, content, contextInfo, responseText)
+    // 重新生成不写入缓存（保证每次结果不同）
+    if (!skipCache) {
+      const cacheKey = makeCacheKey(systemPrompt, userMessage)
+      setCache(cacheKey, category, content, contextInfo, responseText)
+    }
 
-    try {
-      await db.collection('conversations').add({
-        data: {
-          _openid: wxContext.OPENID,
-          category,
-          userInput: content,
-          contextInfo,
-          aiResponse: responseText,
-          createdAt: db.serverDate()
-        }
-      })
-    } catch (saveErr) {
-      console.error('[chat] save conversation error:', saveErr.message)
+    // 正常生成保存到历史，调整/重新生成不重复保存
+    if (!skipCache && !adjustment) {
+      try {
+        await db.collection('conversations').add({
+          data: {
+            _openid: wxContext.OPENID,
+            category,
+            userInput: content,
+            contextInfo,
+            aiResponse: responseText,
+            createdAt: db.serverDate()
+          }
+        })
+      } catch (saveErr) {
+        console.error('[chat] save conversation error:', saveErr.message)
+      }
     }
 
     const parsed = parseSections(responseText)
+    const variants = parseVariants(parsed.script)
 
     return {
       code: 0,
@@ -278,6 +391,7 @@ exports.main = async (event, context) => {
         analysis: parsed.analysis,
         strategy: parsed.strategy,
         script: parsed.script,
+        variants,
         cached: false
       }
     }

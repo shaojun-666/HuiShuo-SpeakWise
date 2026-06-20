@@ -1,4 +1,4 @@
-.page { padding: 0 0 120rpx; }
+.page { padding: 0 0 120rpx; background: var(--bg-primary); }
 .header {
   padding: 40rpx var(--space-md) 16rpx;
   background: linear-gradient(180deg, #F0F4FF 0%, transparent 100%);
@@ -22,7 +22,7 @@
   display: flex;
   align-items: center;
   gap: 16rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
   border: 2rpx solid var(--border-secondary);
   transition: all 0.2s ease;
 }
@@ -82,9 +82,9 @@
   background: var(--bg-secondary);
   border-radius: 20rpx;
   padding: var(--space-md);
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
   transition: all 0.2s ease;
-  border: 2rpx solid transparent;
+  border: 2rpx solid var(--border-secondary);
 }
 .scenario-item:active {
   transform: scale(0.98);

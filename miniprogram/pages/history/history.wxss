@@ -22,11 +22,12 @@
 
 .card-item {
   background: var(--bg-secondary); border-radius: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  border: 2rpx solid var(--border-secondary);
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
   overflow: hidden;
   transition: all 0.2s ease;
 }
-.card-item:active { transform: scale(0.98); }
+.card-item:active { transform: scale(0.98); border-color: var(--color-primary-light); }
 
 .card-header {
   display: flex; justify-content: space-between; align-items: flex-start;

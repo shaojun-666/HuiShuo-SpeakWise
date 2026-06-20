@@ -1,0 +1,62 @@
+.page { min-height: 100vh; background: var(--bg-primary); }
+
+.qa-section {
+  display: flex; flex-direction: column; gap: 20rpx;
+  padding: var(--space-md);
+  padding-bottom: 180rpx;
+}
+
+.qa-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  border: 2rpx solid var(--border-secondary);
+  box-shadow: var(--shadow-md);
+}
+
+.qa-label {
+  font-size: 24rpx; font-weight: 600;
+  margin-bottom: 16rpx;
+  padding-bottom: 14rpx;
+  border-bottom: 2rpx solid var(--border-secondary);
+}
+
+.qa-user-card .qa-label { color: var(--color-primary); }
+.qa-ai-card .qa-label { color: #6C5CE7; }
+
+.qa-content {
+  font-size: 28rpx; line-height: 1.8;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 底部操作栏 */
+.action-bar {
+  display: flex; gap: 16rpx;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 24rpx var(--space-md) calc(24rpx + env(safe-area-inset-bottom));
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.04);
+  border-top: 1rpx solid rgba(0,0,0,0.05);
+}
+
+.action-btn {
+  flex: 1; padding: 24rpx; border-radius: 14rpx;
+  font-size: 26rpx; text-align: center; font-weight: 500;
+  transition: all 0.2s ease;
+}
+.action-btn:active { transform: scale(0.96); }
+
+.copy-btn {
+  background: linear-gradient(135deg, #2B7FFF, #5B9AFF);
+  color: var(--text-white);
+  box-shadow: 0 4rpx 16rpx rgba(43, 127, 255, 0.2);
+}
+
+.retry-btn {
+  background: #F2F2F7;
+  color: var(--text-secondary);
+}

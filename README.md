@@ -116,6 +116,7 @@ HuiShuo-SpeakWise/
 │   │   ├── scenario-detail/  # 场景详情（变量填写 + AI 对话）
 │   │   ├── chat/             # 自由对话
 │   │   ├── history/          # 历史记录 + 收藏
+│   │   ├── history-detail/   # 单条历史详情
 │   │   └── mine/             # 个人中心
 │   ├── components/           # 公共组件
 │   ├── utils/

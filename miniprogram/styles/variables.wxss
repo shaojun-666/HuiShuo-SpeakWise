@@ -16,7 +16,7 @@
   --text-white: #FFFFFF;
 
   /* 背景 */
-  --bg-primary: #F5F5F7;
+  --bg-primary: #EFEFF2;
   --bg-secondary: #FFFFFF;
   --bg-tertiary: #E8E8ED;
   --bg-hover: #F0F0F5;

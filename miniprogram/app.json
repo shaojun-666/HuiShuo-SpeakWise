@@ -4,7 +4,8 @@
     "pages/scenario-detail/scenario-detail",
     "pages/chat/chat",
     "pages/history/history",
-    "pages/mine/mine"
+    "pages/mine/mine",
+    "pages/history-detail/history-detail"
   ],
   "window": {
     "navigationBarTextStyle": "black",

@@ -43,21 +43,9 @@ Page({
   },
 
   onHistoryTap(e) {
-    const { content, title } = e.currentTarget.dataset
-    wx.showModal({
-      title: '查看详情',
-      content: content.substring(0, 500),
-      confirmText: '复制全部',
-      cancelText: '关闭',
-      success: (res) => {
-        if (res.confirm) {
-          wx.setClipboardData({
-            data: content,
-            success: () => wx.showToast({ title: '已复制' })
-          })
-        }
-      }
-    })
+    const item = e.currentTarget.dataset.item
+    wx.setStorageSync('historyDetail', item)
+    wx.navigateTo({ url: '/pages/history-detail/history-detail' })
   },
 
   async onDeleteSaved(e) {
@@ -74,21 +62,13 @@ Page({
   onSavedTap(e) {
     const item = e.currentTarget.dataset.item || {}
     const content = item.content || {}
-    const text = content.content || item.content || ''
-    wx.showModal({
-      title: content.title || '收藏内容',
-      content: text.substring(0, 500),
-      confirmText: '复制全部',
-      cancelText: '关闭',
-      success: (res) => {
-        if (res.confirm) {
-          wx.setClipboardData({
-            data: text,
-            success: () => wx.showToast({ title: '已复制' })
-          })
-        }
-      }
-    })
+    const payload = {
+      userInput: content.title || '收藏内容',
+      aiResponse: content.content || item.content || '',
+      category: content.category || ''
+    }
+    wx.setStorageSync('historyDetail', payload)
+    wx.navigateTo({ url: '/pages/history-detail/history-detail' })
   },
 
   formatTime(date) {
